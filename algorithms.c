@@ -152,8 +152,10 @@ void array_insert(struct array *self, int value, size_t index) {
  */
 void array_remove(struct array *self, size_t index) {
 	// Looking for out of bounds
-	if (index >= self->size)
+	if (index >= self->size) {
+		printf("Index out of bounds on array_remove\n");
 		return;
+	}
 	// Move every element to the right starting at index meaning it will be deleted
 	for(int i = index; i < (int)self->size; i++) {
 		self->data[i] = self->data[i + 1];
@@ -163,14 +165,23 @@ void array_remove(struct array *self, size_t index) {
 
 int array_get(const struct array *self, size_t index) {
     if (index >= self->size) {
-        // Handle out-of-bounds access (e.g., return an error code).
-        fprintf(stderr, "Index out of bounds.\n");
-        exit(EXIT_FAILURE);
+        // Looking for out of bounds
+        printf("Index out of bounds on array_get\n");
+		return 0;
     }
     return self->data[index];
 }
 
+/*
+ * Set an element at the specified index in the array to a new value, or do nothing if the index is not valid
+ */
 void array_set(struct array *self, size_t index, int value) {
+	if(index > self->size) {
+		// Looking for out of bounds
+        printf("Index out of bounds on array_get\n");
+		return;
+	}
+	self->data[index] = value;
 }
 
 size_t array_search(const struct array *self, int value) {
