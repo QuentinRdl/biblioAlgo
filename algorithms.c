@@ -151,6 +151,14 @@ void array_insert(struct array *self, int value, size_t index) {
  * Remove an element in the array (preserving the order)
  */
 void array_remove(struct array *self, size_t index) {
+	// Looking for out of bounds
+	if (index >= self->size)
+		return;
+	// Move every element to the right starting at index meaning it will be deleted
+	for(int i = index; i < (int)self->size; i++) {
+		self->data[i] = self->data[i + 1];
+	}
+	self->size--;
 }
 
 int array_get(const struct array *self, size_t index) {
