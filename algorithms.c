@@ -185,7 +185,11 @@ void array_set(struct array *self, size_t index, int value) {
 }
 
 size_t array_search(const struct array *self, int value) {
-  return -1;
+	for(int i = 0; i < (int)self->size; i++) {
+		if (self->data[i] == value)
+			return i;
+	}
+  	return self->size; // No match found
 }
 
 
