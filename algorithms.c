@@ -234,7 +234,9 @@ bool array_is_sorted(const struct array *self) {
   return true;
 }
 
-
+/*
+ * Make a partition of the array between i and j (inclusive) and returns the index of the pivot
+ */
 ptrdiff_t array_partition(struct array *self, ptrdiff_t i, ptrdiff_t j) {
   return -1;
 }
@@ -264,24 +266,87 @@ void array_heap_remove_top(struct array *self) {
 /*
  * list
  */
+/*
+struct list_node {
+  int data;
+  struct list_node *next;
+  struct list_node *prev;
+};
 
+struct list {
+  struct list_node *first;
+  struct list_node *last;
+};
+*/
 
-
+/*
+ * Create an empty list
+ */
 void list_create(struct list *self) {
+	self->first = NULL;
+	self->last = NULL;
 }
 
+
+/*
+ * Create a list with initial content
+ */
 void list_create_from(struct list *self, const int *other, size_t size) {
+	for(int i = 0; i < (int)size; i++) {
+
+		// We allocate a new node, put the data in it 
+		struct list_node *newNode = (struct list_node *) malloc(sizeof(struct list_node));
+		newNode->data = other[i];
+		newNode->prev = self->last;
+		newNode->next = NULL;
+
+		// We update the first and last pointers.
+		if(i == 0)
+			self->first = newNode; // For the first iteration
+		if(self->last != NULL) {
+			self->last->next = newNode; // Set the last pointer to our new node
+		}
+		self->last = newNode; // Set our new node as the end pointer
+		
+	}
 }
 
+/*
+ * Destroy a list
+ */
 void list_destroy(struct list *self) {
+	struct list_node *curr = self->first;
+	struct list_node *tmp;
+	while(curr != NULL) {
+		tmp = curr; 
+		curr = curr->next;
+		free(tmp);
+	}
+	
+	// Put the values of start and end ptr to NULL
+	self->first = NULL;
+	self->last = NULL;
 }
 
+/*
+ * Tell if the list is empty
+ */
 bool list_empty(const struct list *self) {
-  return true;
+	if(self->first == NULL)
+  		return true;
+	return false;
 }
 
 size_t list_size(const struct list *self) {
-  return -1;
+	size_t count = 0;
+	struct list_node *curr = self->first;
+	while(curr != NULL) {
+		count++;
+		curr = curr->next;
+	}
+	return count;
+  	//return -1;
+
 }
 
 bool list_equals(const struct list *self, const int *data, size_t size) {
