@@ -32,6 +32,12 @@ void array_create_from(struct array *self, const int *other, size_t size) {
 		printf("Error with memory allocation on array_create_from !");
 		return;
 	}
+	// If there is not enough space in the newly created array we need to realloc more space
+	if(size > self->capacity) {
+		int *newData = realloc(self->data, size * sizeof(int));
+		self->data = newData;
+		self->capacity = size;	
+	}
 
 	self->size = size;
 	// We put the data inside the new array
@@ -184,6 +190,9 @@ void array_set(struct array *self, size_t index, int value) {
 	self->data[index] = value;
 }
 
+/*
+ * Search for an element in the array.
+ */
 size_t array_search(const struct array *self, int value) {
 	for(int i = 0; i < (int)self->size; i++) {
 		if (self->data[i] == value)
@@ -192,13 +201,37 @@ size_t array_search(const struct array *self, int value) {
   	return self->size; // No match found
 }
 
-
+/*
+ * Search for an element in the sorted array.
+ */
 size_t array_search_sorted(const struct array *self, int value) {
-  return -1;
+	// Implementation of binary search
+	int left = 0;
+	int right = self->size;
+	int mid;
+	while(left <= right) {
+		mid = (left + right) / 2; 
+		if(self->data[mid] == value)
+			return (size_t)mid; // Match found
+		else if(self->data[mid] > value) 
+			right = mid - 1;
+		else
+			left = mid + 1;
+	}
+
+
+  	return self->size; // No match found
 }
 
+/*
+ * Tell if the array is sorted
+ */
 bool array_is_sorted(const struct array *self) {
-  return false;
+	for(int i = 0; i < (int)self->size - 1; i++) {
+		if(self->data[i] > self->data[i + 1]) 
+			return false;
+	}
+  return true;
 }
 
 
