@@ -18,9 +18,7 @@ void array_create(struct array *self) {
 
 	self->capacity = 10;
 	self->size = 0;
-
 }
-
 
 /*
  * Create an array with initial content
@@ -44,8 +42,8 @@ void array_create_from(struct array *self, const int *other, size_t size) {
 	for(int i = 0; i < (int)size; i++) {
 		self->data[i] = other[i];
 	}
-
 }
+
 /*
  * Destroy an array
  */
@@ -218,9 +216,7 @@ size_t array_search_sorted(const struct array *self, int value) {
 		else
 			left = mid + 1;
 	}
-
-
-  	return self->size; // No match found
+	return self->size; // No match found
 }
 
 /*
