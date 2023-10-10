@@ -9,14 +9,14 @@
  * Create an empty array
  */
 void array_create(struct array *self) {
-	self->data = (int *) malloc(10 * sizeof(int));
+	self->data = (int *) malloc(20*sizeof(int));
 	// We check for errors with malloc
 	if(self->data == NULL) {
 		printf("Error with memory allocation !");
 		return;
 	}
 
-	self->capacity = 10;
+	self->capacity = 20;
 	self->size = 0;
 }
 
@@ -234,7 +234,30 @@ bool array_is_sorted(const struct array *self) {
  * Make a partition of the array between i and j (inclusive) and returns the index of the pivot
  */
 ptrdiff_t array_partition(struct array *self, ptrdiff_t i, ptrdiff_t j) {
-  return -1;
+	// We choose the pivot (the first value stored in the array)
+	ptrdiff_t pivotIndex = i;
+	ptrdiff_t left = i;
+	ptrdiff_t right = j;
+	int temp;
+	while(left <= right) {
+		while(left <= right && self->data[left] <= self->data[pivotIndex]) {
+			left++;
+		}
+		while(left <= right && self->data[right] >= self->data[pivotIndex]) {
+			right--;
+		}
+		if(left <= right) {
+			// We need to swap the values of left and right
+			temp = self->data[left];
+			self->data[left] = self->data[right];
+			self->data[right] = temp;
+		}
+	}
+	// Swap the value that is stored in right with the position of the pivot
+	temp = self->data[pivotIndex];
+	self->data[pivotIndex] = self->data[right];
+	self->data[right] = temp;
+	return right;
 }
 
 
