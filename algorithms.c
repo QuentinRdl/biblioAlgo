@@ -9,7 +9,7 @@
  * Create an empty array
  */
 void array_create(struct array *self) {
-	self->data = (int *) malloc(20*sizeof(int));
+	self->data = (int *) malloc(20 * sizeof(int));
 	// We check for errors with malloc
 	if(self->data == NULL) {
 		printf("Error with memory allocation !");
@@ -90,7 +90,7 @@ void array_push_back(struct array *self, int value) {
 	if (self->size>= self->capacity) {
 		int *newData = (int *) realloc(self->data, (self->capacity + 1) * sizeof(int));
 		if(newData == NULL) {
-			printf("Problem with memory allocation is array_push_back\n");
+			printf("Problem with memory allocation in array_push_back\n");
 			return;
 		}
 		self->capacity++;
@@ -100,13 +100,6 @@ void array_push_back(struct array *self, int value) {
     self->data[self->size] = value;
     self->size++;
 }
-/*
-struct array {
-  int *data;
-  size_t capacity;
-  size_t size;
-};
-*/
 
 /*
  * Remove the element at the end of the array
@@ -118,7 +111,7 @@ void array_pop_back(struct array *self) {
 	// We simply reallocate with capacity - 1 which will scrape the last element of the array
 	int *newData = (int *) realloc(self->data, (self->capacity - 1) * sizeof(int));
 	if(newData == NULL) {
-		printf("Problem with memory allocation is array_push_back\n");
+		printf("Problem with memory allocation in array_pop_back\n");
 		return;
 	}
 	self->capacity--;
@@ -135,7 +128,7 @@ void array_insert(struct array *self, int value, size_t index) {
 	if(self->capacity > self->size + 1) {
 		int *newData = (int *) realloc(self->data, (self->capacity + 1) * sizeof(int));
 		if(newData == NULL) {
-			printf("Problem with memory allocation is array_push_back\n");
+			printf("Problem with memory allocation is array_insert\n");
 			return;
 		}
 		
@@ -225,9 +218,9 @@ size_t array_search_sorted(const struct array *self, int value) {
 bool array_is_sorted(const struct array *self) {
 	for(int i = 0; i < (int)self->size - 1; i++) {
 		if(self->data[i] > self->data[i + 1]) 
-			return false;
+		return false;
 	}
-  return true;
+	return true;
 }
 
 /*
@@ -260,10 +253,31 @@ ptrdiff_t array_partition(struct array *self, ptrdiff_t i, ptrdiff_t j) {
 	return right;
 }
 
-
-void array_quick_sort(struct array *self) {
+void quick_sort_reccu(struct array *self, ptrdiff_t low, ptrdiff_t high) {
+	if(low < high) {
+		ptrdiff_t pivotIndex = array_partition(self, low, high); // Paritions the array and get the index of the pivot
+		quick_sort_reccu(self, low, pivotIndex - 1);
+		quick_sort_reccu(self, pivotIndex + 1, high);
+	}
 }
 
+/*
+ * Sort the array with quick sort
+ */
+void array_quick_sort(struct array *self) {
+	if(self->size <= 1)
+		return; // Nothing to sort
+	quick_sort_reccu(self, 0, self->size - 1);
+	
+}
+
+/*
+struct array {
+  int *data;
+  size_t capacity;
+  size_t size;
+};
+*/
 
 void array_heap_sort(struct array *self) {
 }
@@ -285,18 +299,6 @@ void array_heap_remove_top(struct array *self) {
 /*
  * list
  */
-/*
-struct list_node {
-  int data;
-  struct list_node *next;
-  struct list_node *prev;
-};
-
-struct list {
-  struct list_node *first;
-  struct list_node *last;
-};
-*/
 
 /*
  * Create an empty list
@@ -311,22 +313,28 @@ void list_create(struct list *self) {
  * Create a list with initial content
  */
 void list_create_from(struct list *self, const int *other, size_t size) {
-	for(int i = 0; i < (int)size; i++) {
+	if(self == NULL || other == NULL || size == 0)
+		return;
+	self->first = NULL;
+	self->last = NULL;
+	for(size_t i = 0; i < size; i++) {
 
 		// We allocate a new node, put the data in it 
-		struct list_node *newNode = (struct list_node *) malloc(sizeof(struct list_node));
+		struct list_node *newNode = malloc(sizeof(struct list_node));
+		if (newNode == NULL) {
+			printf("Allocation error");
+			return;
+		}
 		newNode->data = other[i];
 		newNode->prev = self->last;
 		newNode->next = NULL;
 
-		// We update the first and last pointers.
-		if(i == 0)
-			self->first = newNode; // For the first iteration
 		if(self->last != NULL) {
 			self->last->next = newNode; // Set the last pointer to our new node
+		} else {
+			self->first = newNode;
 		}
-		self->last = newNode; // Set our new node as the end pointer
-		
+		self->last = newNode;
 	}
 }
 
@@ -347,12 +355,9 @@ void list_destroy(struct list *self) {
 	self->last = NULL;
 }
 
-/*
- * Tell if the list is empty
- */
 bool list_empty(const struct list *self) {
 	if(self->first == NULL)
-  		return true;
+		return true;
 	return false;
 }
 
@@ -364,15 +369,54 @@ size_t list_size(const struct list *self) {
 		curr = curr->next;
 	}
 	return count;
-  	//return -1;
+	//return -1;
 
 }
 
+/*
+struct list_node {
+  int data;
+  struct list_node *next;
+  struct list_node *prev;
+};
+
+struct list {
+  struct list_node *first;
+  struct list_node *last;
+};
+*/
+
+/*
+ * Tell if the list is empty
+ */
+/*
+ * Compares the list to an array (data and size) 
+ */
 bool list_equals(const struct list *self, const int *data, size_t size) {
-  return false;
+	size_t count = 0;
+	struct list_node *curr = self->first;
+	while(curr != NULL && count < size) {
+		if(*data != curr->data)
+			return false;
+		count++;
+		curr = curr->next;
+		data++;
+	}
+	if(curr != NULL || count < size)
+		return false; // One is snaller than the other
+	return true;
 }
 
 void list_push_front(struct list *self, int value) {
+	struct list_node *new;
+	new->data = value;
+	if(list_empty(self)) {
+		new->next = NULL;
+	} else {
+		new->next = self->first;
+	}
+	self->first = new;
+	printf("FIUNI");
 }
 
 void list_pop_front(struct list *self) {
