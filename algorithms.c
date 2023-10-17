@@ -61,7 +61,7 @@ void array_destroy(struct array *self) {
 bool array_empty(const struct array *self) {
 	if(self->data == NULL || self->size == 0)
 		return true;
-  return false;
+	return false;
 }
 
 /*
@@ -422,12 +422,51 @@ void list_push_front(struct list *self, int value) {
 }
 
 void list_pop_front(struct list *self) {
+	if(self == NULL || self->first == NULL)
+		return; // Nothing to pop
+	else if(self->first->next == NULL) {
+		self->first = NULL;
+		self->last = NULL;
+		free(self->first);
+		return;
+	}
+	struct list_node *curr = self->first;
+	self->first = self->first->next;
+	free(curr);
 }
 
+/*
+ * Add an element in the list at the end
+ */
 void list_push_back(struct list *self, int value) {
+	struct list_node *new = malloc(sizeof(struct list_node));
+	new->data = value;
+	new->next = NULL;
+	if(list_empty(self)) {
+		self->first = new;
+		self->last = new;
+		new->prev = NULL;
+	} else {
+		new->prev = self->last;
+		self->last->next = new;
+		self->last = new;
+	}
 }
+
 
 void list_pop_back(struct list *self) {
+	if(list_empty(self))
+		return;
+ 
+	struct list_node *curr = self->last;
+	self->last = self->last->prev;
+	if(self->last != NULL) {
+		self->last->next = NULL;
+	} else {
+		self->first = NULL; // List is empty
+	}
+	free(curr);
+
 }
 
 
