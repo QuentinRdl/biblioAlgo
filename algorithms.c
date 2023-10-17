@@ -356,9 +356,7 @@ void list_destroy(struct list *self) {
 }
 
 bool list_empty(const struct list *self) {
-	if(self->first == NULL)
-		return true;
-	return false;
+	return self->first == NULL;
 }
 
 size_t list_size(const struct list *self) {
@@ -408,15 +406,19 @@ bool list_equals(const struct list *self, const int *data, size_t size) {
 }
 
 void list_push_front(struct list *self, int value) {
-	struct list_node *new;
+	struct list_node *new = malloc(sizeof(struct list_node));
 	new->data = value;
+	new->prev = NULL;
 	if(list_empty(self)) {
 		new->next = NULL;
+		self->first = new;
+		self->last = new;
 	} else {
 		new->next = self->first;
+		self->first->prev = new;
+		self->first = new;
 	}
-	self->first = new;
-	printf("FIUNI");
+	return;
 }
 
 void list_pop_front(struct list *self) {
@@ -433,11 +435,51 @@ void list_insert(struct list *self, int value, size_t index) {
 }
 
 
+/*
+ * Remove an element in the list (preserving the order)
+ * index is valid
+ */
 void list_remove(struct list *self, size_t index) {
+	if(list_empty(self))
+		return;
+	if(index == 0) {
+		struct list_node *curr = self->first;
+		if(self->first->next == NULL) {
+			self->first = NULL;
+			free(self->first);
+			return;
+		}
+		self->first = self->first->next;
+		free(curr);
+		return;
+	}
+	struct list_node *curr = self->first;
+	struct list_node *prev = NULL;
+	size_t i = 0;
+	while(i < index && curr != NULL) {
+		prev = curr;
+		curr = curr->next;
+		i++;
+	}
+	if(curr == NULL)
+		return; // Index is not correct
+	prev->next = curr->next;	
+	if(curr->next != NULL)
+		curr->next->prev = prev;
+	free(curr);
 }
 
 int list_get(const struct list *self, size_t index) {
-  return 42;
+	struct list_node *curr = self->first;
+	size_t i = 0;
+	while(i < index && curr != NULL) {
+		curr = curr->next;
+		i++;
+	}
+	if(curr == NULL) {
+		return 0; // i was out of bounds
+	}
+	return curr->data ;
 }
 
 void list_set(struct list *self, size_t index, int value) {
