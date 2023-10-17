@@ -355,6 +355,9 @@ void list_destroy(struct list *self) {
 	self->last = NULL;
 }
 
+/*
+ * Tell if the list is empty
+ */
 bool list_empty(const struct list *self) {
 	return self->first == NULL;
 }
@@ -384,9 +387,6 @@ struct list {
 };
 */
 
-/*
- * Tell if the list is empty
- */
 /*
  * Compares the list to an array (data and size) 
  */
@@ -466,13 +466,27 @@ void list_pop_back(struct list *self) {
 		self->first = NULL; // List is empty
 	}
 	free(curr);
-
 }
-
 
 void list_insert(struct list *self, int value, size_t index) {
+	if(self == NULL)
+		return;
+	size_t i = 0;
+	struct list_node *curr = self->first;
+	//struct list_node *prev = NULL;
+	while(curr->next != NULL && i < index) {
+	//	prev = curr;
+		curr = curr->next;
+	}
+	if(i >= index) {
+		return; // Out of bounds
+	}
+	struct list_node *new = malloc(sizeof(struct list_node));
+	new->data = value;
+	new->prev = curr;
+	new->next = curr->next;
+	curr->next = new;
 }
-
 
 /*
  * Remove an element in the list (preserving the order)
@@ -522,14 +536,35 @@ int list_get(const struct list *self, size_t index) {
 }
 
 void list_set(struct list *self, size_t index, int value) {
+	if(index < 0)
+		return;
+	struct list_node *curr = self->first;
+	size_t i = 0;
+	while(i < index && curr != NULL) {
+		curr = curr->next;
+		i++;
+	}
+	if(curr != NULL) 
+		curr->data = value;
 }
 
+/*
+ * Search for an element in the list and return its index or the size of the list if not present.
+ */
 size_t list_search(const struct list *self, int value) {
-  return -1;
+	size_t i = 0;
+	struct list_node *curr = self->first;
+	while(curr != NULL) {
+		if(curr->data == value)
+			return i;
+		curr = curr->next;	
+		i++;
+	}
+	return i;
 }
 
 bool list_is_sorted(const struct list *self) {
-  return false;
+	return false;
 }
 
 void list_split(struct list *self, struct list *out1, struct list *out2) {
@@ -545,8 +580,21 @@ void list_merge_sort(struct list *self) {
 /*
  * tree
  */
+/*
+struct tree_node {
+  int data;
+  struct tree_node *left;
+  struct tree_node *right;
+};
 
+struct tree {
+  struct tree_node *root;
+};
+*/
 void tree_create(struct tree *self) {
+	struct tree_node *root = malloc(sizeof(struct tree_node));
+	root->data = 0;
+	root->left = root->right = NULL;
 }
 
 
