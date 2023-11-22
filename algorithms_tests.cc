@@ -506,7 +506,7 @@ TEST(ArrayIsSortedTest, NotSortedAtTheEnd) {
 
 /*
  * array_partition
-*/
+ */
 
 TEST(ArrayPartitionTest, WholeSorted) {
   static const int origin[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
@@ -1596,7 +1596,6 @@ TEST(ListMergeSortTest, Sorted) {
 
 TEST(TreeCreateTest, Empty) {
   struct tree t;
-
   tree_create(&t);
 
   EXPECT_TRUE(tree_empty(&t));

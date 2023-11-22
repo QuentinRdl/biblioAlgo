@@ -1,6 +1,7 @@
 #include "algorithms.h"
 
 #include <assert.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -160,6 +161,9 @@ void array_remove(struct array *self, size_t index) {
 	self->size--;
 }
 
+/*
+ * Get an element at the specified index in the array, or 0 if the index is not valid
+ * */
 int array_get(const struct array *self, size_t index) {
     if (index >= self->size) {
         // Looking for out of bounds
@@ -272,27 +276,34 @@ void array_quick_sort(struct array *self) {
 }
 
 /*
-struct array {
-  int *data;
-  size_t capacity;
-  size_t size;
-};
-*/
-
+ * Sort the array with heap sort
+ * */
 void array_heap_sort(struct array *self) {
 }
 
+/*
+ * Tell if the array is a heap
+ */
 bool array_is_heap(const struct array *self) {
   return false;
 }
 
+/*
+ * Add a value into the array considered as a heap
+ */
 void array_heap_add(struct array *self, int value) {
 }
 
+/*
+ * Get the value at the top of the array
+ */
 int array_heap_top(const struct array *self) {
   return 42;
 }
 
+/*
+ * Remove the top value in the array considered as a heap
+ */
 void array_heap_remove_top(struct array *self) {
 }
 
@@ -342,6 +353,7 @@ void list_create_from(struct list *self, const int *other, size_t size) {
  * Destroy a list
  */
 void list_destroy(struct list *self) {
+	if(self == NULL) return;
 	struct list_node *curr = self->first;
 	struct list_node *tmp;
 	while(curr != NULL) {
@@ -591,43 +603,122 @@ struct tree {
   struct tree_node *root;
 };
 */
+void tree_node_destroy(struct tree_node *node);
+
+/*
+ * Create an empty tree
+ */
 void tree_create(struct tree *self) {
-	struct tree_node *root = malloc(sizeof(struct tree_node));
-	root->data = 0;
-	root->left = root->right = NULL;
+	self->root = NULL;
 }
 
-
+/*
+ * Destroys a tree
+ */
 void tree_destroy(struct tree *self) {
+	if(self == NULL) return;
+	tree_node_destroy(self->root);
+	self = NULL;
 }
 
+void tree_node_destroy(struct tree_node *node) {
+	if(node == NULL) return;
+	if(node->right != NULL) tree_node_destroy(node->right);
+	if(node->left != NULL) tree_node_destroy(node->left);
 
+	free(node);
+}
+
+bool tree_contains_reccu(struct tree_node *node, int value) {
+	if(node == NULL) return false;
+	if(node->data == value) return true;
+
+	if(value < node->data) return(tree_contains_reccu(node->left, value));
+	if(value > node->data) return(tree_contains_reccu(node->right, value));
+	return false;
+}
+/*
+ * Tell if a value is in the tree
+ */
 bool tree_contains(const struct tree *self, int value) {
-  return false;
+	if(self == NULL) return false;
+	return tree_contains_reccu(self->root, value);
 }
 
+struct tree_node* create_node(int value) {
+	struct tree_node *new_node = (struct tree_node*)malloc(sizeof(struct tree_node));
+	if (new_node != NULL) {
+		new_node->data = value;
+		new_node->left = NULL;
+		new_node->right = NULL;
+	}
+	return new_node;
+}
 
+bool tree_insert_reccu(struct tree_node **node, int value) {
+	if (*node == NULL) {
+		*node = create_node(value);
+		return true; // Value insertedy
+	}
+
+	if (value < (*node)->data) {
+		return tree_insert_reccu(&((*node)->left), value);
+	} else if (value > (*node)->data) {
+		return tree_insert_reccu(&((*node)->right), value);
+	} else {
+		return false; // Value present
+	}
+}
+
+/*
+ * Insert a value in the tree and return false if the value was already present
+ */
 bool tree_insert(struct tree *self, int value) {
-  return false;
+	return tree_insert_reccu(&(self->root), value);
 }
 
-
+/*
+ * Remove a value from the tree and return false if the value was not present
+ */
 bool tree_remove(struct tree *self, int value) {
   return false;
 }
 
+/*
+ * Tell if the tree is empty
+ */
 bool tree_empty(const struct tree *self) {
-  return true;
+	return(self->root == NULL);
 }
 
+/*
+ * Get the size of the tree
+ */
+size_t node_size(const struct tree_node *self) {
+	if(self == NULL) return 0; 
+	return 1 + node_size(self->left) + node_size(self->right);
+}
 
 size_t tree_size(const struct tree *self) {
-  return -1;
+	if(self == NULL) return 0;
+	return node_size(self->root);
 }
 
+size_t node_height(const struct tree_node *node) {
+	if(node == NULL) return 0;
 
+	size_t sizeLeft = node_height(node->left);
+	size_t sizeRight = node_height(node->right);
+	
+	if(sizeLeft > sizeRight) return sizeLeft + 1;
+	return sizeRight + 1;
+}
+/*
+ * Get the height of the tree
+ */
 size_t tree_height(const struct tree *self) {
-  return -1;
+	if(self == NULL) return NULL;
+	return node_height(self->root);
 }
 
 
