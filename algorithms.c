@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#define debug false
 /*
  * Create an empty array
  */
@@ -151,7 +152,7 @@ void array_insert(struct array *self, int value, size_t index) {
 void array_remove(struct array *self, size_t index) {
 	// Looking for out of bounds
 	if (index >= self->size) {
-		printf("Index out of bounds on array_remove\n");
+		if(debug) printf("Index out of bounds on array_remove\n");
 		return;
 	}
 	// Move every element to the right starting at index meaning it will be deleted
@@ -285,26 +286,66 @@ void array_heap_sort(struct array *self) {
  * Tell if the array is a heap
  */
 bool array_is_heap(const struct array *self) {
-  return false;
+	if(self == NULL || self->size < 1) return true;
+	size_t n = self->size;
+	for(size_t i = 0; i < n - 1; i++) {
+		int lt = 2 * i + 1;
+		int rt = 2 * i + 2;
+		if(lt < n && self->data[lt] > self->data[i]) return false;
+		if(rt < n && self->data[rt] > self->data[i]) return false;
+	}
+	return true;
 }
 
 /*
  * Add a value into the array considered as a heap
  */
 void array_heap_add(struct array *self, int value) {
+	size_t i = self->size; // Get the size of the heap
+	self->data[i] = value;
+	while(i > 0) {
+		size_t j = (i - 1) / 2; // Find location of parent
+		if(self->data[i] <= self->data[j]) break;
+		int tmp = self->data[i];
+		self->data[i] = self->data[j];
+		self->data[j] = tmp; 
+		i = j;
+	}
 }
 
 /*
  * Get the value at the top of the array
  */
 int array_heap_top(const struct array *self) {
-  return 42;
+	if(self == NULL || self->size < 1) return 42;
+	return self->data[0];
 }
 
 /*
  * Remove the top value in the array considered as a heap
  */
 void array_heap_remove_top(struct array *self) {
+	size_t n = self->size;
+	if(n <= 1) return; // Nothing to remove
+
+	self->data[0] = self->data[n - 1];
+	self->size--;
+	size_t i = 0;
+	while(i < (n / 2)) {
+		size_t lt = 2 * i + 1;
+		size_t rt = 2 * i + 2;
+		size_t j = i;
+		if (lt < self->size && self->data[lt] > self->data[j]) j = lt;
+		if (rt < self->size && self->data[rt] > self->data[j]) j = rt;
+		if (j != i) {
+			int tmp = self->data[i];
+			self->data[i] = self->data[j];
+			self->data[j] = tmp;
+			i = j;
+		} else {
+			break;
+		}
+	}
 }
 
 /*
