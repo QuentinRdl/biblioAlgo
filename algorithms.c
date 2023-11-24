@@ -589,16 +589,15 @@ int list_get(const struct list *self, size_t index) {
 }
 
 void list_set(struct list *self, size_t index, int value) {
-	if(index < 0)
-		return;
+	if(index < 0) return;
 	struct list_node *curr = self->first;
 	size_t i = 0;
+
 	while(i < index && curr != NULL) {
 		curr = curr->next;
 		i++;
 	}
-	if(curr != NULL) 
-		curr->data = value;
+	if(curr != NULL) curr->data = value;
 }
 
 /*
@@ -616,16 +615,47 @@ size_t list_search(const struct list *self, int value) {
 	return i;
 }
 
+/*
+struct list {
+  struct list_node *first;
+  struct list_node *last;
+
+};
+*/
+
 bool list_is_sorted(const struct list *self) {
-	return false;
+	if(self == NULL || self->first == NULL) return true;
+	if(self->first->data > self->last->data) return false;
+	struct list_node *curr = self->first;
+	while(curr->next != NULL) {
+		if(curr->next->data < curr->data) return false;
+		curr = curr->next;
+	}
+	return true;
 }
 
+/*
+ * Split a list in two. At the end, self should be empty.
+ */
 void list_split(struct list *self, struct list *out1, struct list *out2) {
 }
 
+/*
+ * Merge two sorted lists in an empty list. At the end, in1 and in2 should be empty.
+ */
 void list_merge(struct list *self, struct list *in1, struct list *in2) {
+	/*
+	self->first = in1->first;
+	in1->last = in2->first;
+	self->last = in2->last;
+	list_destroy(in1);
+	list_destroy(in2);
+	*/
 }
 
+/*
+ * Sort a list with merge sort
+ */
 void list_merge_sort(struct list *self) {
 }
 
@@ -664,9 +694,8 @@ void tree_destroy(struct tree *self) {
 
 void tree_node_destroy(struct tree_node *node) {
 	if(node == NULL) return;
-	if(node->right != NULL) tree_node_destroy(node->right);
 	if(node->left != NULL) tree_node_destroy(node->left);
-
+	if(node->right != NULL) tree_node_destroy(node->right);
 	free(node);
 }
 
@@ -718,12 +747,74 @@ bool tree_insert(struct tree *self, int value) {
 	return tree_insert_reccu(&(self->root), value);
 }
 
-/*
- * Remove a value from the tree and return false if the value was not present
- */
-bool tree_remove(struct tree *self, int value) {
-  return false;
+struct tree_node *findMin(struct tree_node *self) {
+	struct tree_node *min = self;
+	while(min->left != NULL) min = min->left;
+	return min;
 }
+
+struct tree_node *findMax(struct tree_node *self) {
+	struct tree_node *max = self;
+	while(self->right != NULL) self = self->right;
+	return self;
+}
+
+void replaceNode(struct tree_node *oldNode, struct tree_node *newNode) {
+    if (oldNode->left == NULL && oldNode->right == NULL) {
+        // If oldNode is a leaf node, set tree's root to NULL
+        // Not sure if this is the desired behavior. You might want to adjust it based on your requirements.
+        oldNode = NULL;
+    } else if (oldNode->left == NULL) {
+        // If oldNode has no left child, replace it with its right child
+        oldNode->data = oldNode->right->data;
+        replaceNode(oldNode->right, newNode);
+    } else if (oldNode->right == NULL) {
+        // If oldNode has no right child, replace it with its left child
+        oldNode->data = oldNode->left->data;
+        replaceNode(oldNode->left, newNode);
+    }
+    // Adjust other pointers as needed
+}
+
+bool tree_remove_reccu(struct tree_node **root, int value) {
+    if (*root == NULL) {
+        return false; // Value not found
+    }
+
+    if (value > (*root)->data) {
+        return tree_remove_reccu(&(*root)->right, value);
+    } else if (value < (*root)->data) {
+        return tree_remove_reccu(&(*root)->left, value);
+    }
+
+    // Value found, perform removal
+    if ((*root)->left == NULL) {
+        // Replace the current node with its right child
+        struct tree_node *temp = (*root)->right;
+        free(*root);
+        *root = temp;
+    } else if ((*root)->right == NULL) {
+        // Replace the current node with its left child
+        struct tree_node *temp = (*root)->left;
+        free(*root);
+        *root = temp;
+    } else {
+        // Case 2: Node with two children
+        // Get the in-order successor (minimum in the right subtree)
+        struct tree_node *successor = findMin((*root)->right);
+        // Copy the in-order successor's value to this node
+        (*root)->data = successor->data;
+        // Remove the in-order successor
+        tree_remove_reccu(&(*root)->right, successor->data);
+    }
+
+    return true;
+}
+
+bool tree_remove(struct tree *self, int value) {
+    return tree_remove_reccu(&(self->root), value);
+}
+
 
 /*
  * Tell if the tree is empty
@@ -763,11 +854,31 @@ size_t tree_height(const struct tree *self) {
 }
 
 
+void tree_walk_pre_order_reccu(const struct tree_node *self, tree_func_t func, void *user_data) {
+	func(self->data, user_data);
+	if(self->right != NULL) tree_walk_pre_order_reccu(self->right, func, user_data);
+	if(self->left != NULL) tree_walk_pre_order_reccu(self->left, func, user_data);
+}
+
 void tree_walk_pre_order(const struct tree *self, tree_func_t func, void *user_data)  {
+	tree_walk_pre_order_reccu(self->root, func, user_data);
+}
+
+void tree_walk_in_order_reccu(const struct tree_node *self, tree_func_t func, void *user_data) {
+	if(self->left != NULL)	tree_walk_in_order_reccu(self->left, func, user_data);
+	func(self->data, user_data);
+	if(self->right != NULL)	tree_walk_in_order_reccu(self->right, func, user_data);
 }
 
 void tree_walk_in_order(const struct tree *self, tree_func_t func, void *user_data) {
+	tree_walk_in_order_reccu(self->root, func, user_data);
 }
 
+void tree_walk_post_order_reccu(const struct tree_node *self, tree_func_t func, void *user_data) {
+	if(self->left != NULL)	tree_walk_post_order_reccu(self->left, func, user_data);
+	if(self->right != NULL)	tree_walk_post_order_reccu(self->right, func, user_data);
+	func(self->data, user_data);
+}
 void tree_walk_post_order(const struct tree *self, tree_func_t func, void *user_data) {
+	tree_walk_post_order_reccu(self->root, func, user_data);
 }
