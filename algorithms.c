@@ -50,8 +50,10 @@ void array_create_from(struct array *self, const int *other, size_t size) {
  * Destroy an array
  */
 void array_destroy(struct array *self) {
-	if(self->data != NULL)
+	if(self->data != NULL){
 		free(self->data);
+		self->data = NULL;
+	}
 	// Set the values to 0 (not necessary)
 	self->capacity = 0;
 	self->size = 0;
@@ -222,8 +224,7 @@ size_t array_search_sorted(const struct array *self, int value) {
  */
 bool array_is_sorted(const struct array *self) {
 	for(int i = 0; i < (int)self->size - 1; i++) {
-		if(self->data[i] > self->data[i + 1]) 
-		return false;
+		if(self->data[i] > self->data[i + 1]) return false;
 	}
 	return true;
 }
@@ -270,8 +271,7 @@ void quick_sort_reccu(struct array *self, ptrdiff_t low, ptrdiff_t high) {
  * Sort the array with quick sort
  */
 void array_quick_sort(struct array *self) {
-	if(self->size <= 1)
-		return; // Nothing to sort
+	if(self->size <= 1) return; // Nothing to sort
 	quick_sort_reccu(self, 0, self->size - 1);
 	
 }
@@ -280,6 +280,7 @@ void array_quick_sort(struct array *self) {
  * Sort the array with heap sort
  * */
 void array_heap_sort(struct array *self) {
+
 }
 
 /*
@@ -317,7 +318,7 @@ void array_heap_add(struct array *self, int value) {
  * Get the value at the top of the array
  */
 int array_heap_top(const struct array *self) {
-	if(self == NULL || self->size < 1) return 42;
+	assert(self != NULL && self->size < 1);
 	return self->data[0];
 }
 
@@ -327,24 +328,21 @@ int array_heap_top(const struct array *self) {
 void array_heap_remove_top(struct array *self) {
 	size_t n = self->size;
 	if(n <= 1) return; // Nothing to remove
-
 	self->data[0] = self->data[n - 1];
 	self->size--;
 	size_t i = 0;
-	while(i < (n / 2)) {
+	while(i < n / 2) {
 		size_t lt = 2 * i + 1;
 		size_t rt = 2 * i + 2;
 		size_t j = i;
-		if (lt < self->size && self->data[lt] > self->data[j]) j = lt;
 		if (rt < self->size && self->data[rt] > self->data[j]) j = rt;
+		if (lt < self->size && self->data[lt] > self->data[j]) j = lt;
 		if (j != i) {
 			int tmp = self->data[i];
 			self->data[i] = self->data[j];
 			self->data[j] = tmp;
 			i = j;
-		} else {
-			break;
-		}
+		} else 	break;
 	}
 }
 
@@ -423,8 +421,6 @@ size_t list_size(const struct list *self) {
 		curr = curr->next;
 	}
 	return count;
-	//return -1;
-
 }
 
 /*
@@ -453,8 +449,7 @@ bool list_equals(const struct list *self, const int *data, size_t size) {
 		curr = curr->next;
 		data++;
 	}
-	if(curr != NULL || count < size)
-		return false; // One is snaller than the other
+	if(curr != NULL || count < size) return false; // One is snaller than the other
 	return true;
 }
 
@@ -478,9 +473,9 @@ void list_pop_front(struct list *self) {
 	if(self == NULL || self->first == NULL)
 		return; // Nothing to pop
 	else if(self->first->next == NULL) {
+		free(self->first);
 		self->first = NULL;
 		self->last = NULL;
-		free(self->first);
 		return;
 	}
 	struct list_node *curr = self->first;
@@ -506,39 +501,43 @@ void list_push_back(struct list *self, int value) {
 	}
 }
 
-
+/*
+ * Remove the element at the end of the list
+ */
 void list_pop_back(struct list *self) {
-	if(list_empty(self))
-		return;
+	if(list_empty(self)) return;
  
 	struct list_node *curr = self->last;
 	self->last = self->last->prev;
-	if(self->last != NULL) {
-		self->last->next = NULL;
-	} else {
-		self->first = NULL; // List is empty
-	}
+	if(self->last != NULL) self->last->next = NULL;
+	else self->first = NULL; // List is empty
 	free(curr);
+	if(self->first->next == NULL) {
+		free(self->first);
+		self->first = NULL;
+		self->last = NULL;
+		return;
+	}
 }
 
+/*
+ * Insert an element in the list (preserving the order)
+ * index is valid or equals to the size of the list (insert at the end)
+ */
 void list_insert(struct list *self, int value, size_t index) {
-	if(self == NULL)
+	if(index == 0) {
+		list_push_front(self,  value);
 		return;
-	size_t i = 0;
+	}
+	if(self == NULL) return;
 	struct list_node *curr = self->first;
 	//struct list_node *prev = NULL;
-	while(curr->next != NULL && i < index) {
-	//	prev = curr;
-		curr = curr->next;
-	}
-	if(i >= index) {
-		return; // Out of bounds
-	}
+	for(size_t i = 0; i < index - 1; i ++) curr = curr->next; 
+	assert(curr != NULL);
 	struct list_node *new = malloc(sizeof(struct list_node));
-	new->data = value;
-	new->prev = curr;
 	new->next = curr->next;
 	curr->next = new;
+	new->data = value;
 }
 
 /*
@@ -546,8 +545,7 @@ void list_insert(struct list *self, int value, size_t index) {
  * index is valid
  */
 void list_remove(struct list *self, size_t index) {
-	if(list_empty(self))
-		return;
+	if(list_empty(self)) return;
 	if(index == 0) {
 		struct list_node *curr = self->first;
 		if(self->first->next == NULL) {
@@ -567,11 +565,9 @@ void list_remove(struct list *self, size_t index) {
 		curr = curr->next;
 		i++;
 	}
-	if(curr == NULL)
-		return; // Index is not correct
+	if(curr == NULL) return; // Index is not correct
 	prev->next = curr->next;	
-	if(curr->next != NULL)
-		curr->next->prev = prev;
+	if(curr->next != NULL) curr->next->prev = prev;
 	free(curr);
 }
 
@@ -582,9 +578,7 @@ int list_get(const struct list *self, size_t index) {
 		curr = curr->next;
 		i++;
 	}
-	if(curr == NULL) {
-		return 0; // i was out of bounds
-	}
+	if(curr == NULL) return 0; // i out of bounds
 	return curr->data ;
 }
 
@@ -607,8 +601,7 @@ size_t list_search(const struct list *self, int value) {
 	size_t i = 0;
 	struct list_node *curr = self->first;
 	while(curr != NULL) {
-		if(curr->data == value)
-			return i;
+		if(curr->data == value) return i;
 		curr = curr->next;	
 		i++;
 	}
@@ -638,25 +631,92 @@ bool list_is_sorted(const struct list *self) {
  * Split a list in two. At the end, self should be empty.
  */
 void list_split(struct list *self, struct list *out1, struct list *out2) {
+	size_t size = list_size(self); // Get the size
+	for(size_t i = 0; i < size; i++) {
+		if(i < size / 2) {
+			// If i < size / 2 but in out1
+			list_push_back(out1, self->first->data);
+			list_pop_front(self);
+		} else {
+			// Else put in out2
+			list_push_back(out2, self->first->data);
+			list_pop_front(self);
+		}
+
+	}
+	assert(self->first == NULL); // Makes sure self if empty
 }
 
 /*
  * Merge two sorted lists in an empty list. At the end, in1 and in2 should be empty.
  */
 void list_merge(struct list *self, struct list *in1, struct list *in2) {
-	/*
-	self->first = in1->first;
-	in1->last = in2->first;
-	self->last = in2->last;
-	list_destroy(in1);
-	list_destroy(in2);
-	*/
+	while(in1->first != NULL && in2->first != NULL) {
+		if(in1->first->data < in2->first->data) {
+			list_push_back(self, in1->first->data);
+			list_pop_front(in1);
+		} else {
+			list_push_back(self, in2->first->data);
+			list_pop_front(in2);
+		}
+	}
+	// Finish to fill self if needed
+	while(in1->first != NULL) {
+		list_push_back(self, in1->first->data);
+		list_pop_front(in1);
+	}
+
+	while(in2->first != NULL) {
+		list_push_back(self, in2->first->data);
+		list_pop_front(in2);
+	}
+
+}
+
+
+struct list_node *list_find_middle(struct list_node *low, struct list_node *high) {
+	printf("E\n");
+	struct list_node *curr = low;
+	size_t index = 0;
+	while(curr != high) {
+		curr = curr->next;
+		index++;
+	}
+	curr = low;
+	index = index / 2;
+	for(size_t i = 0; i < index; ++i) curr = curr->next;
+	return curr;
+	printf("B\n");
+
+}
+void list_merge_sort_reccu(struct list *self, struct list_node *low, struct list_node *high) {
+	if (high == NULL || low == high || low->next == high) return;
+
+	struct list *new1 = malloc(sizeof(struct list));
+	struct list *new2 = malloc(sizeof(struct list));  // Temporary lists to store the two halves
+
+	struct list_node *mid = list_find_middle(low, high);
+	struct list_node *next_of_mid = mid->next;
+
+	// Split the list into two halves
+	mid->next = NULL;
+
+	list_merge_sort_reccu(new1, low, mid);
+	list_merge_sort_reccu(new2, next_of_mid, high);
+	printf("C\n");
+	// Merge the two sorted halves
+	list_merge(self, new1, new2);
+	printf("D\n");
 }
 
 /*
  * Sort a list with merge sort
  */
 void list_merge_sort(struct list *self) {
+	size_t length = list_size(self);
+	printf("E\n");
+	if (length <= 1) return; // Nothing to sort
+	list_merge_sort_reccu(self, self->first, self->last);
 }
 
 
@@ -755,8 +815,8 @@ struct tree_node *findMin(struct tree_node *self) {
 
 struct tree_node *findMax(struct tree_node *self) {
 	struct tree_node *max = self;
-	while(self->right != NULL) self = self->right;
-	return self;
+	while(max->right != NULL) max = max->right;
+	return max;
 }
 
 void replaceNode(struct tree_node *oldNode, struct tree_node *newNode) {
@@ -849,7 +909,7 @@ size_t node_height(const struct tree_node *node) {
  * Get the height of the tree
  */
 size_t tree_height(const struct tree *self) {
-	if(self == NULL) return NULL;
+	if(self == NULL) return 0;
 	return node_height(self->root);
 }
 
