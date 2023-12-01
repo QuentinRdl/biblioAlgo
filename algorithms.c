@@ -110,17 +110,8 @@ void array_push_back(struct array *self, int value) {
  */
 void array_pop_back(struct array *self) {
 	// In the case there is nothing to pop
-	if(self->size <= 0)
-		return;
-	// We simply reallocate with capacity - 1 which will scrape the last element of the array
-	int *newData = (int *) realloc(self->data, (self->capacity - 1) * sizeof(int));
-	if(newData == NULL) {
-		printf("Problem with memory allocation in array_pop_back\n");
-		return;
-	}
-	self->capacity--;
+	if(self->size <= 0) return;
 	self->size--;
-	self->data = newData;
 }
 
 
@@ -171,7 +162,7 @@ int array_get(const struct array *self, size_t index) {
     if (index >= self->size) {
         // Looking for out of bounds
         printf("Index out of bounds on array_get\n");
-		return 0;
+	return 0;
     }
     return self->data[index];
 }
@@ -182,7 +173,7 @@ int array_get(const struct array *self, size_t index) {
 void array_set(struct array *self, size_t index, int value) {
 	if(index > self->size) {
 		// Looking for out of bounds
-        printf("Index out of bounds on array_get\n");
+		printf("Index out of bounds on array_get\n");
 		return;
 	}
 	self->data[index] = value;
@@ -193,8 +184,7 @@ void array_set(struct array *self, size_t index, int value) {
  */
 size_t array_search(const struct array *self, int value) {
 	for(int i = 0; i < (int)self->size; i++) {
-		if (self->data[i] == value)
-			return i;
+		if (self->data[i] == value) return i;
 	}
   	return self->size; // No match found
 }
@@ -209,14 +199,11 @@ size_t array_search_sorted(const struct array *self, int value) {
 	int mid;
 	while(left <= right) {
 		mid = (left + right) / 2; 
-		if(self->data[mid] == value)
-			return (size_t)mid; // Match found
-		else if(self->data[mid] > value) 
-			right = mid - 1;
-		else
-			left = mid + 1;
+		if(self->data[mid] == value) return (size_t)mid; // Match found
+		else if(self->data[mid] > value) right = mid - 1;
+		else left = mid + 1;
 	}
-	return self->size; // No match found
+	return self->size; // No match Found
 }
 
 /*
@@ -280,7 +267,16 @@ void array_quick_sort(struct array *self) {
  * Sort the array with heap sort
  * */
 void array_heap_sort(struct array *self) {
+	for(size_t i = 0; i < self->size; ++i) {
+		int value = self->data[i];
+		array_heap_add(self, value);
+	}
 
+	for(size_t i = 0; i < self->size; ++i) {
+		int value = self->data[i];
+		//array_heap_remove_top(self);
+		self->data[self->size - i - 1] = value;
+	}
 }
 
 /*
@@ -290,8 +286,8 @@ bool array_is_heap(const struct array *self) {
 	if(self == NULL || self->size < 1) return true;
 	size_t n = self->size;
 	for(size_t i = 0; i < n - 1; i++) {
-		int lt = 2 * i + 1;
-		int rt = 2 * i + 2;
+		size_t lt = 2 * i + 1;
+		size_t rt = 2 * i + 2;
 		if(lt < n && self->data[lt] > self->data[i]) return false;
 		if(rt < n && self->data[rt] > self->data[i]) return false;
 	}
@@ -318,7 +314,6 @@ void array_heap_add(struct array *self, int value) {
  * Get the value at the top of the array
  */
 int array_heap_top(const struct array *self) {
-	assert(self != NULL && self->size < 1);
 	return self->data[0];
 }
 
@@ -327,25 +322,26 @@ int array_heap_top(const struct array *self) {
  */
 void array_heap_remove_top(struct array *self) {
 	size_t n = self->size;
-	if(n <= 1) return; // Nothing to remove
+	if(n == 1) array_pop_back(self);
 	self->data[0] = self->data[n - 1];
-	self->size--;
+	array_pop_back(self);
 	size_t i = 0;
-	while(i < n / 2) {
+	while(i < (n / 2)) {
 		size_t lt = 2 * i + 1;
 		size_t rt = 2 * i + 2;
 		size_t j = i;
+		if (lt < self->size && self->data[lt] > self->data[i]) j = lt;
 		if (rt < self->size && self->data[rt] > self->data[j]) j = rt;
-		if (lt < self->size && self->data[lt] > self->data[j]) j = lt;
 		if (j != i) {
 			int tmp = self->data[i];
 			self->data[i] = self->data[j];
 			self->data[j] = tmp;
 			i = j;
-		} else 	break;
+		} else {
+			break;
+		}
 	}
 }
-
 /*
  * list
  */
@@ -673,50 +669,27 @@ void list_merge(struct list *self, struct list *in1, struct list *in2) {
 
 }
 
-
-struct list_node *list_find_middle(struct list_node *low, struct list_node *high) {
-	printf("E\n");
-	struct list_node *curr = low;
-	size_t index = 0;
-	while(curr != high) {
-		curr = curr->next;
-		index++;
-	}
-	curr = low;
-	index = index / 2;
-	for(size_t i = 0; i < index; ++i) curr = curr->next;
-	return curr;
-	printf("B\n");
-
-}
-void list_merge_sort_reccu(struct list *self, struct list_node *low, struct list_node *high) {
-	if (high == NULL || low == high || low->next == high) return;
-
-	struct list *new1 = malloc(sizeof(struct list));
-	struct list *new2 = malloc(sizeof(struct list));  // Temporary lists to store the two halves
-
-	struct list_node *mid = list_find_middle(low, high);
-	struct list_node *next_of_mid = mid->next;
-
-	// Split the list into two halves
-	mid->next = NULL;
-
-	list_merge_sort_reccu(new1, low, mid);
-	list_merge_sort_reccu(new2, next_of_mid, high);
-	printf("C\n");
-	// Merge the two sorted halves
-	list_merge(self, new1, new2);
-	printf("D\n");
-}
-
 /*
  * Sort a list with merge sort
  */
 void list_merge_sort(struct list *self) {
-	size_t length = list_size(self);
-	printf("E\n");
-	if (length <= 1) return; // Nothing to sort
-	list_merge_sort_reccu(self, self->first, self->last);
+	if(list_size(self) < 2) return;
+
+	// Create
+	struct list first;
+	struct list last; 
+	list_create(&first);
+	list_create(&last);
+
+	// Split & merge
+	list_split(self, &first, &last);
+	list_merge_sort(&first);
+	list_merge_sort(&last);
+	list_merge(self, &first, &last);
+
+	// Destroy
+	list_destroy(&first);
+	list_destroy(&last);
 }
 
 
