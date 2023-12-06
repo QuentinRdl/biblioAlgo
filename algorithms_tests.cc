@@ -815,10 +815,13 @@ TEST(ArrayHeapRemoveTopTest, Stressed) {
 
   EXPECT_TRUE(array_is_heap(&a));
 
-  for (int i = 0; i < BIG_SIZE; ++i) {
+for (int i = 0; i < BIG_SIZE; ++i) {
     EXPECT_EQ(BIG_SIZE - i - 1, array_heap_top(&a));
     array_heap_remove_top(&a);
-  }
+
+    // Print for debugging
+    printf("\n\nExpected: %d, Actual: %d\n\n\n\n", BIG_SIZE - i - 1, array_heap_top(&a));
+}
 
   EXPECT_TRUE(array_empty(&a));
 

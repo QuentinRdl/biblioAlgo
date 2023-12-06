@@ -263,18 +263,39 @@ void array_quick_sort(struct array *self) {
 	
 }
 
+static void heapify(struct array *self, size_t n, size_t i) {
+    size_t largest = i;
+    size_t left = 2 * i + 1;
+    size_t right = 2 * i + 2;
+
+    if (left < n && self->data[left] > self->data[largest]) {
+        largest = left;
+    }
+
+    if (right < n && self->data[right] > self->data[largest]) {
+        largest = right;
+    }
+
+    if (largest != i) {
+        int temp = self->data[i];
+        self->data[i] = self->data[largest];
+        self->data[largest] = temp;
+
+        heapify(self, n, largest);
+    }
+}
 /*
  * Sort the array with heap sort
  * */
 void array_heap_sort(struct array *self) {
-	for(size_t i = 0; i < self->size; ++i) {
+	for(ptrdiff_t i = 0; i < self->size; ++i) {
 		int value = self->data[i];
 		array_heap_add(self, value);
 	}
 
-	for(size_t i = 0; i < self->size; ++i) {
+	for(ptrdiff_t i = 0; i < self->size; ++i) {
 		int value = self->data[i];
-		//array_heap_remove_top(self);
+		array_heap_remove_top(self);
 		self->data[self->size - i - 1] = value;
 	}
 }
@@ -299,7 +320,7 @@ bool array_is_heap(const struct array *self) {
  */
 void array_heap_add(struct array *self, int value) {
 	size_t i = self->size; // Get the size of the heap
-	self->data[i] = value;
+	array_insert(self, value, i);
 	while(i > 0) {
 		size_t j = (i - 1) / 2; // Find location of parent
 		if(self->data[i] <= self->data[j]) break;
@@ -321,31 +342,12 @@ int array_heap_top(const struct array *self) {
  * Remove the top value in the array considered as a heap
  */
 void array_heap_remove_top(struct array *self) {
-	size_t n = self->size;
-	if(n == 1) array_pop_back(self);
-	self->data[0] = self->data[n - 1];
-	array_pop_back(self);
-	size_t i = 0;
-	while(i < (n / 2)) {
-		size_t lt = 2 * i + 1;
-		size_t rt = 2 * i + 2;
-		size_t j = i;
-		if (lt < self->size && self->data[lt] > self->data[i]) j = lt;
-		if (rt < self->size && self->data[rt] > self->data[j]) j = rt;
-		if (j != i) {
-			int tmp = self->data[i];
-			self->data[i] = self->data[j];
-			self->data[j] = tmp;
-			i = j;
-		} else {
-			break;
-		}
-	}
+    if (self->size > 0) {
+        self->data[0] = self->data[self->size - 1];
+        self->size--;
+        heapify(self, self->size, 0);
+    }
 }
-/*
- * list
- */
-
 /*
  * Create an empty list
  */
