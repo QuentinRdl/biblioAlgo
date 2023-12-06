@@ -194,17 +194,19 @@ size_t array_search(const struct array *self, int value) {
  */
 size_t array_search_sorted(const struct array *self, int value) {
 	// Implementation of binary search
-	int left = 0;
-	int right = self->size;
-	int mid;
-	while(left <= right) {
-		mid = (left + right) / 2; 
-		if(self->data[mid] == value) return (size_t)mid; // Match found
-		else if(self->data[mid] > value) right = mid - 1;
-		else left = mid + 1;
+	size_t left = 0;
+	size_t right = self->size;
+	
+	while(left < right) {
+		size_t mid = left + (right - left) / 2; 
+		if(self->data[mid] == value) return mid; // Match found
+		else if(self->data[mid] < value) left = mid + 1;
+		else right = mid;
 	}
 	return self->size; // No match Found
 }
+
+
 
 /*
  * Tell if the array is sorted
@@ -288,17 +290,23 @@ static void heapify(struct array *self, size_t n, size_t i) {
  * Sort the array with heap sort
  * */
 void array_heap_sort(struct array *self) {
-	for(ptrdiff_t i = 0; i < self->size; ++i) {
-		int value = self->data[i];
-		array_heap_add(self, value);
-	}
+    // Build max heap
+    for (int i = self->size / 2 - 1; i >= 0; --i) {
+        heapify(self, self->size, i);
+    }
 
-	for(ptrdiff_t i = 0; i < self->size; ++i) {
-		int value = self->data[i];
-		array_heap_remove_top(self);
-		self->data[self->size - i - 1] = value;
-	}
+    // Extract elements from the heap one by one
+    for (int i = self->size - 1; i > 0; --i) {
+        // Swap the root (maximum element) with the last element
+        int temp = self->data[0];
+        self->data[0] = self->data[i];
+        self->data[i] = temp;
+
+        // Call heapify on the reduced heap
+        heapify(self, i, 0);
+    }
 }
+
 
 /*
  * Tell if the array is a heap
@@ -581,7 +589,6 @@ int list_get(const struct list *self, size_t index) {
 }
 
 void list_set(struct list *self, size_t index, int value) {
-	if(index < 0) return;
 	struct list_node *curr = self->first;
 	size_t i = 0;
 
