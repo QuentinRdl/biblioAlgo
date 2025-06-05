@@ -206,8 +206,6 @@ size_t array_search_sorted(const struct array *self, int value) {
 	return self->size; // No match Found
 }
 
-
-
 /*
  * Tell if the array is sorted
  */
@@ -307,7 +305,6 @@ void array_heap_sort(struct array *self) {
     }
 }
 
-
 /*
  * Tell if the array is a heap
  */
@@ -363,7 +360,6 @@ void list_create(struct list *self) {
 	self->first = NULL;
 	self->last = NULL;
 }
-
 
 /*
  * Create a list with initial content
@@ -428,19 +424,6 @@ size_t list_size(const struct list *self) {
 	}
 	return count;
 }
-
-/*
-struct list_node {
-  int data;
-  struct list_node *next;
-  struct list_node *prev;
-};
-
-struct list {
-  struct list_node *first;
-  struct list_node *last;
-};
-*/
 
 /*
  * Compares the list to an array (data and size) 
@@ -613,14 +596,6 @@ size_t list_search(const struct list *self, int value) {
 	return i;
 }
 
-/*
-struct list {
-  struct list_node *first;
-  struct list_node *last;
-
-};
-*/
-
 bool list_is_sorted(const struct list *self) {
 	if(self == NULL || self->first == NULL) return true;
 	if(self->first->data > self->last->data) return false;
@@ -701,21 +676,6 @@ void list_merge_sort(struct list *self) {
 	list_destroy(&last);
 }
 
-
-/*
- * tree
- */
-/*
-struct tree_node {
-  int data;
-  struct tree_node *left;
-  struct tree_node *right;
-};
-
-struct tree {
-  struct tree_node *root;
-};
-*/
 void tree_node_destroy(struct tree_node *node);
 
 /*
